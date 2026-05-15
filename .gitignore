@@ -56,10 +56,21 @@ cover/
 *.pot
 
 # Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+
+# SQLite databases (runtime + test)
+*.db
+*.db-shm
+*.db-wal
+
+# Dev server output
+server.log
+server.err
+
+# Application logs
+*.log
 
 # Flask stuff:
 instance/
