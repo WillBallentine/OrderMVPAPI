@@ -36,7 +36,7 @@ async def require_auth(
         return user
 
     if api_key and api_key == settings.api_key:
-        return None  # valid service-to-service call, no user context
+        return None
 
     raise _AUTH_REQUIRED
 

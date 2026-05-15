@@ -1,8 +1,9 @@
-"""Integration tests for the /api/v1/documents/extract endpoint."""
+"""Integration tests for the /api/v1/documents/ endpoints."""
 import pytest
 from unittest.mock import patch
 
 BASE = "/api/v1/documents/extract"
+ORDER_BASE = "/api/v1/documents/order"
 
 FAKE_PDF_BYTES = (
     b"%PDF-1.4 fake pdf content for testing"
@@ -69,6 +70,47 @@ class TestDocumentExtract:
 
         assert resp.status_code == 200
         assert resp.json()["extracted"]["extraction_confidence"] == "low"
+
+
+class TestCreateOrderFromDocument:
+    FULL_EXTRACTION = {"first_name": "Marie", "last_name": "Curie", "dob": "12/05/1900"}
+    PARTIAL_EXTRACTION = {"first_name": None, "last_name": "Curie", "dob": "12/05/1900"}
+
+    def test_creates_order_returns_201(self, client, auth):
+        with patch("app.routers.documents.extract_patient_info", return_value=self.FULL_EXTRACTION):
+            resp = client.post(ORDER_BASE, files=_make_upload(FAKE_PDF_BYTES), headers=auth)
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["patient_first_name"] == "Marie"
+        assert data["patient_last_name"] == "Curie"
+        assert data["patient_dob"] == "12/05/1900"
+        assert "id" in data
+
+    def test_order_is_persisted(self, client, auth):
+        with patch("app.routers.documents.extract_patient_info", return_value=self.FULL_EXTRACTION):
+            resp = client.post(ORDER_BASE, files=_make_upload(FAKE_PDF_BYTES), headers=auth)
+        order_id = resp.json()["id"]
+        get_resp = client.get(f"/api/v1/orders/{order_id}", headers=auth)
+        assert get_resp.status_code == 200
+        assert get_resp.json()["patient_last_name"] == "Curie"
+
+    def test_missing_fields_returns_422(self, client, auth):
+        with patch("app.routers.documents.extract_patient_info", return_value=self.PARTIAL_EXTRACTION):
+            resp = client.post(ORDER_BASE, files=_make_upload(FAKE_PDF_BYTES), headers=auth)
+        assert resp.status_code == 422
+        assert "first_name" in resp.json()["detail"]
+
+    def test_requires_auth(self, client):
+        resp = client.post(ORDER_BASE, files=_make_upload(FAKE_PDF_BYTES))
+        assert resp.status_code == 401
+
+    def test_rejects_non_pdf(self, client, auth):
+        resp = client.post(
+            ORDER_BASE,
+            files={"file": ("doc.txt", b"text", "text/plain")},
+            headers=auth,
+        )
+        assert resp.status_code == 415
 
 
 class TestDocumentExtractionRegression:

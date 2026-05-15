@@ -1,1 +1,172 @@
-# OrderMVPAPI
+# Order MVP API
+
+A production-ready REST API for managing patient orders. Supports manual CRUD, bulk ingestion, and PDF document upload with automatic patient data extraction (no LLM — OCR only).
+
+## Features
+
+- **Order CRUD** — create, read, update, delete individual patient orders
+- **Batch ingestion** — create up to 100 orders in a single request
+- **PDF extraction** — upload a scanned or text-based PDF; first name, last name, and date of birth are extracted automatically
+  - Text-based PDFs: pdfplumber
+  - Scanned/image PDFs: PyMuPDF + Tesseract OCR fallback
+- **Authentication** — dual-mode: JWT bearer tokens for users, API key for service-to-service calls
+- **User management** — register/login, role-based access (admin/user)
+- **Activity logging** — every request is recorded to the database
+- **Rate limiting** — 100 requests/minute per IP (slowapi)
+- **Async OCR** — PDF extraction runs in a thread pool executor; the event loop is never blocked
+- **Docker** — single-command local setup
+
+## Tech Stack
+
+- **Python 3.12+**, FastAPI, Uvicorn
+- **SQLAlchemy** (SQLite with WAL mode)
+- **pdfplumber**, PyMuPDF, Tesseract OCR
+- **python-jose** (JWT), **bcrypt** (password hashing)
+- **slowapi** (rate limiting)
+- **pytest** (118 tests, 95% coverage)
+
+## Quickstart
+
+### Local (Python)
+
+```bash
+# 1. Install Tesseract (required for scanned PDF support)
+# macOS:  brew install tesseract
+# Ubuntu: apt-get install tesseract-ocr
+# Windows: winget install UB-Mannheim.TesseractOCR
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Configure environment
+cp .env.example .env
+# Edit .env — set API_KEY and SECRET_KEY to strong random values
+
+# 4. Start the server
+uvicorn app.main:app --reload
+```
+
+API docs available at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+### Docker
+
+```bash
+docker compose up --build
+```
+
+The SQLite database is persisted in a named volume (`db_data`).
+
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `DATABASE_URL` | `sqlite:///./orders.db` | SQLAlchemy connection string |
+| `API_KEY` | `dev-api-key-change-in-production` | Service-to-service API key |
+| `SECRET_KEY` | `change-this-secret-key-in-production` | JWT signing secret |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | JWT expiry |
+| `MAX_UPLOAD_SIZE_MB` | `10` | Maximum PDF upload size |
+| `RATE_LIMIT_REQUESTS` | `100` | Requests allowed per period |
+| `RATE_LIMIT_PERIOD` | `minute` | Rate limit window |
+| `ALLOWED_ORIGINS` | `["*"]` | CORS allowed origins |
+| `DEBUG` | `false` | Enable debug mode |
+
+Generate strong secrets:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+## API Reference
+
+All endpoints are prefixed with `/api/v1`. Interactive docs at `/docs`.
+
+### Auth
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/auth/register` | Register a new user |
+| `POST` | `/auth/login` | Login, receive JWT |
+
+### Orders
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/orders/` | Required | Create single order |
+| `POST` | `/orders/batch` | Required | Create up to 100 orders |
+| `GET` | `/orders/` | Required | List orders (paginated) |
+| `GET` | `/orders/{id}` | Required | Get order by ID |
+| `PUT` | `/orders/{id}` | Required | Update order |
+| `DELETE` | `/orders/{id}` | Required | Delete order |
+
+### Documents
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/documents/extract` | Required | Extract patient info from PDF (does not save) |
+| `POST` | `/documents/order` | Required | Extract patient info from PDF and create an order in one step |
+
+**Two workflows — choose based on your use case:**
+
+*Review before saving (two steps):*
+1. `POST /documents/extract` → receive `{ first_name, last_name, dob }`
+2. Verify or correct the extracted values
+3. `POST /orders/` → create the order with the confirmed data
+
+*Direct save (one step):*
+1. `POST /documents/order` → order created immediately from extracted data; returns 422 if any required field cannot be extracted
+
+### Users
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/users/me` | JWT only | Get current user |
+| `GET` | `/users/` | Admin only | List all users |
+
+### Activity Logs
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/activity-logs/` | Required | List activity logs (paginated) |
+
+### Authentication
+
+**JWT (user login):**
+```
+Authorization: Bearer <token>
+```
+
+**API key (service-to-service):**
+```
+X-API-Key: <key>
+```
+
+## Running Tests
+
+```bash
+# All tests (excludes slow OCR tests)
+pytest tests/ --ignore=tests/unit/test_pdf_formats.py
+
+# Include OCR tests (requires Tesseract)
+pytest tests/
+
+# With coverage
+pytest tests/ --cov=app
+```
+
+118 tests, 95% coverage across unit and integration suites.
+
+## Deployment (Render)
+
+The included `render.yaml` configures a web service with:
+- Tesseract installed at build time
+- `API_KEY` and `SECRET_KEY` auto-generated by Render
+
+Push to a connected GitHub repo — Render will pick up `render.yaml` automatically.
+
+## Scalability Notes
+
+This MVP uses SQLite and in-memory rate limiting, which works for a single-process deployment. Production path:
+
+- **Database**: swap `DATABASE_URL` for PostgreSQL — no code changes required (SQLAlchemy abstraction)
+- **Rate limiting**: configure slowapi with a Redis backend to share state across workers
+- **PDF caching**: cache extraction results by SHA-256 of file bytes to skip re-OCR on duplicate uploads
+- **Workers**: run multiple Uvicorn workers behind a reverse proxy (nginx, Render's load balancer)

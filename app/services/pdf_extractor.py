@@ -255,7 +255,6 @@ def _get_lines(file_bytes: bytes) -> list[str]:
     if len([l for l in lines if l.strip()]) >= 3:
         return lines
     raw = _extract_text_ocr(file_bytes)
-    # Normalize common OCR separator artifacts before returning
     return [_normalize_ocr_artifacts(line) for line in raw]
 
 
@@ -266,12 +265,10 @@ def extract_patient_info(file_bytes: bytes) -> dict:
     last_name: Optional[str] = None
     dob: Optional[str] = None
 
-    # Clean colon-inline format (most reliable)
     first_name = _colon_inline(lines, FIRST_NAME_LABELS)
     last_name = _colon_inline(lines, LAST_NAME_LABELS)
     dob = _colon_inline_dob(lines)
 
-    # Full name inline → split
     if not first_name or not last_name:
         full_name_inline = _colon_inline(lines, FULL_NAME_LABELS)
         if full_name_inline:
@@ -279,14 +276,12 @@ def extract_patient_info(file_bytes: bytes) -> dict:
             first_name = first_name or fn
             last_name = last_name or ln
 
-    # Merged two-column (scanned fax layout)
     if not first_name or not last_name or not dob:
         fn, ln, d = _two_column_extract(lines)
         first_name = first_name or fn
         last_name = last_name or ln
         dob = dob or d
 
-    # Header-above-value
     if not first_name or not last_name:
         full_name_next = _next_line_name(lines, FULL_NAME_LABELS + FIRST_NAME_LABELS)
         if full_name_next:
@@ -296,7 +291,6 @@ def extract_patient_info(file_bytes: bytes) -> dict:
     if not dob:
         dob = _next_line_dob(lines)
 
-    # Fallback date scan
     if not dob:
         dob = _scan_for_date(lines)
 
