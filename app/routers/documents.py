@@ -1,7 +1,10 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.orm import Session
+from typing import Optional
 from ..database import get_db
-from ..dependencies import require_api_key
+from ..dependencies import require_auth
+from ..models.user import User
 from ..services.pdf_extractor import extract_patient_info
 from ..config import get_settings
 
@@ -20,7 +23,7 @@ PDF_MAGIC_BYTES = b"%PDF"
 async def extract_from_document(
     file: UploadFile = File(..., description="PDF document to extract patient info from"),
     db: Session = Depends(get_db),
-    _: str = Depends(require_api_key),
+    _: Optional[User] = Depends(require_auth),
 ):
     settings = get_settings()
     max_bytes = settings.max_upload_size_mb * 1024 * 1024
@@ -45,7 +48,14 @@ async def extract_from_document(
             detail="File does not appear to be a valid PDF",
         )
 
-    result = extract_patient_info(file_bytes)
+    try:
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, extract_patient_info, file_bytes)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Failed to extract patient information from the document",
+        )
 
     return {
         "filename": file.filename,

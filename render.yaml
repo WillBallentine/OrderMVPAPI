@@ -23,4 +23,8 @@ services:
         value: "100"
       - key: RATE_LIMIT_PERIOD
         value: minute
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
 

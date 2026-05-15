@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from ..database import get_db
-from ..dependencies import require_api_key
+from ..dependencies import require_auth
 from ..models.activity_log import ActivityLog
+from ..models.user import User
 from ..schemas.activity_log import ActivityLogResponse
 
 router = APIRouter(prefix="/activity-logs", tags=["Activity Logs"])
@@ -19,7 +20,7 @@ def list_activity_logs(
     skip: int = 0,
     limit: int = Query(default=100, le=500),
     db: Session = Depends(get_db),
-    _: str = Depends(require_api_key),
+    _: Optional[User] = Depends(require_auth),
 ):
     return (
         db.query(ActivityLog)

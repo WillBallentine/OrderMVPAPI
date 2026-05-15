@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 os.environ.setdefault("API_KEY", "test-api-key")
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test_orders.db")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only")
 
 from app.main import app
 from app.database import Base, get_db
@@ -42,6 +43,31 @@ def client():
 @pytest.fixture
 def auth(client):
     return {"X-API-Key": "test-api-key"}
+
+
+@pytest.fixture
+def jwt_auth(client):
+    client.post("/api/v1/auth/register", json={"username": "testuser", "password": "testpass1"})
+    resp = client.post(
+        "/api/v1/auth/login",
+        data={"username": "testuser", "password": "testpass1"},
+    )
+    token = resp.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def admin_jwt_auth():
+    from app.models.user import User, Role
+    from app.services.auth_service import hash_password, create_access_token
+
+    db = next(override_get_db())
+    user = User(username="adminuser", hashed_password=hash_password("adminpass1"), role=Role.admin)
+    db.add(user)
+    db.commit()
+    db.close()
+    token = create_access_token("adminuser")
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture

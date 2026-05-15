@@ -8,8 +8,8 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from .config import get_settings
 from .database import engine, Base
-from .models import Order, ActivityLog  # ensure tables are registered
-from .routers import orders, documents, activity_logs
+from .models import Order, ActivityLog, User  # ensure tables are registered
+from .routers import orders, documents, activity_logs, auth, users
 from .middleware.logging_middleware import ActivityLoggingMiddleware
 
 settings = get_settings()
@@ -44,6 +44,8 @@ app.add_middleware(
 )
 
 API_PREFIX = "/api/v1"
+app.include_router(auth.router, prefix=API_PREFIX)
+app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(orders.router, prefix=API_PREFIX)
 app.include_router(documents.router, prefix=API_PREFIX)
 app.include_router(activity_logs.router, prefix=API_PREFIX)
