@@ -73,8 +73,8 @@ class TestDocumentExtract:
 
 
 class TestCreateOrderFromDocument:
-    FULL_EXTRACTION = {"first_name": "Marie", "last_name": "Curie", "dob": "12/05/1900"}
-    PARTIAL_EXTRACTION = {"first_name": None, "last_name": "Curie", "dob": "12/05/1900"}
+    FULL_EXTRACTION = {"patient_first_name": "Marie", "patient_last_name": "Curie", "patient_dob": "12/05/1900", "extraction_confidence": "high"}
+    PARTIAL_EXTRACTION = {"patient_first_name": None, "patient_last_name": "Curie", "patient_dob": "12/05/1900", "extraction_confidence": "low"}
 
     def test_creates_order_returns_201(self, client, auth):
         with patch("app.routers.documents.extract_patient_info", return_value=self.FULL_EXTRACTION):
@@ -98,7 +98,7 @@ class TestCreateOrderFromDocument:
         with patch("app.routers.documents.extract_patient_info", return_value=self.PARTIAL_EXTRACTION):
             resp = client.post(ORDER_BASE, files=_make_upload(FAKE_PDF_BYTES), headers=auth)
         assert resp.status_code == 422
-        assert "first_name" in resp.json()["detail"]
+        assert "patient_first_name" in resp.json()["detail"]
 
     def test_requires_auth(self, client):
         resp = client.post(ORDER_BASE, files=_make_upload(FAKE_PDF_BYTES))

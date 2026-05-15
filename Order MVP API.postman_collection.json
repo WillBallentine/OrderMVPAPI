@@ -1,0 +1,345 @@
+{
+  "info": {
+    "_postman_id": "93cff348-98d6-4b44-81da-386fa2f7e04e",
+    "name": "Order MVP API",
+    "description": "REST API for managing patient orders. Upload PDF documents to extract structured patient data. All activity is logged to the database.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "28016770"
+  },
+  "item": [
+    {
+      "name": "api",
+      "item": [
+        {
+          "name": "v1",
+          "item": [
+            {
+              "name": "auth",
+              "item": [
+                {
+                  "name": "register",
+                  "item": [
+                    {
+                      "name": "Register User",
+                      "request": {
+                        "method": "POST",
+                        "header": [
+                          { "key": "Content-Type", "value": "application/json" },
+                          { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"username\": \"string\",\n  \"password\": \"string\"\n}",
+                          "options": { "raw": { "headerFamily": "json", "language": "json" } }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/auth/register",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "auth", "register"]
+                        }
+                      },
+                      "response": []
+                    }
+                  ]
+                },
+                {
+                  "name": "login",
+                  "item": [
+                    {
+                      "name": "Login",
+                      "request": {
+                        "method": "POST",
+                        "header": [
+                          { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+                          { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                          "mode": "urlencoded",
+                          "urlencoded": [
+                            { "key": "username", "value": "string" },
+                            { "key": "password", "value": "string" },
+                            { "key": "grant_type", "value": "password" }
+                          ]
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/auth/login",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "auth", "login"]
+                        }
+                      },
+                      "response": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "users",
+              "item": [
+                {
+                  "name": "me",
+                  "item": [
+                    {
+                      "name": "Get Current User",
+                      "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Accept", "value": "application/json" }],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/users/me",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "users", "me"]
+                        }
+                      },
+                      "response": []
+                    }
+                  ]
+                },
+                {
+                  "name": "List Users (Admin)",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Accept", "value": "application/json" }],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/v1/users/?skip=0&limit=100",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "v1", "users", ""],
+                      "query": [{ "key": "skip", "value": "0" }, { "key": "limit", "value": "100" }]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "orders",
+              "item": [
+                {
+                  "name": "Create Order",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "Content-Type", "value": "application/json" },
+                      { "key": "Accept", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"patient_first_name\": \"string\",\n  \"patient_last_name\": \"string\",\n  \"patient_dob\": \"string\"\n}",
+                      "options": { "raw": { "headerFamily": "json", "language": "json" } }
+                    },
+                    "url": {
+                      "raw": "{{baseUrl}}/api/v1/orders/",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "v1", "orders", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "batch",
+                  "item": [
+                    {
+                      "name": "Batch Create Orders",
+                      "request": {
+                        "method": "POST",
+                        "header": [
+                          { "key": "Content-Type", "value": "application/json" },
+                          { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "[\n  {\n    \"patient_first_name\": \"string\",\n    \"patient_last_name\": \"string\",\n    \"patient_dob\": \"string\"\n  },\n  {\n    \"patient_first_name\": \"string\",\n    \"patient_last_name\": \"string\",\n    \"patient_dob\": \"string\"\n  }\n]",
+                          "options": { "raw": { "headerFamily": "json", "language": "json" } }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/orders/batch",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "orders", "batch"]
+                        }
+                      },
+                      "response": []
+                    }
+                  ]
+                },
+                {
+                  "name": "List Orders",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Accept", "value": "application/json" }],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/v1/orders/?skip=0&limit=100",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "v1", "orders", ""],
+                      "query": [{ "key": "skip", "value": "0" }, { "key": "limit", "value": "100" }]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "{order_id}",
+                  "item": [
+                    {
+                      "name": "Get Order by ID",
+                      "request": {
+                        "method": "GET",
+                        "header": [{ "key": "Accept", "value": "application/json" }],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/orders/:order_id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "orders", ":order_id"],
+                          "variable": [{ "key": "order_id", "value": "1" }]
+                        }
+                      },
+                      "response": []
+                    },
+                    {
+                      "name": "Update Order",
+                      "request": {
+                        "method": "PUT",
+                        "header": [
+                          { "key": "Content-Type", "value": "application/json" },
+                          { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"patient_first_name\": null,\n  \"patient_last_name\": null,\n  \"patient_dob\": null\n}",
+                          "options": { "raw": { "headerFamily": "json", "language": "json" } }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/orders/:order_id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "orders", ":order_id"],
+                          "variable": [{ "key": "order_id", "value": "1" }]
+                        }
+                      },
+                      "response": []
+                    },
+                    {
+                      "name": "Delete Order",
+                      "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/orders/:order_id",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "orders", ":order_id"],
+                          "variable": [{ "key": "order_id", "value": "1" }]
+                        }
+                      },
+                      "response": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "documents",
+              "item": [
+                {
+                  "name": "extract",
+                  "item": [
+                    {
+                      "name": "Extract Patient Info from PDF",
+                      "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Accept", "value": "application/json" }],
+                        "body": {
+                          "mode": "formdata",
+                          "formdata": [
+                            {
+                              "description": "PDF document to extract patient info from",
+                              "key": "file",
+                              "type": "file",
+                              "src": []
+                            }
+                          ]
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/documents/extract",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "documents", "extract"]
+                        }
+                      },
+                      "response": []
+                    }
+                  ]
+                },
+                {
+                  "name": "order",
+                  "item": [
+                    {
+                      "name": "Create Order from PDF",
+                      "request": {
+                        "method": "POST",
+                        "header": [{ "key": "Accept", "value": "application/json" }],
+                        "body": {
+                          "mode": "formdata",
+                          "formdata": [
+                            {
+                              "description": "PDF document to extract patient info and create an order from",
+                              "key": "file",
+                              "type": "file",
+                              "src": []
+                            }
+                          ]
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/v1/documents/order",
+                          "host": ["{{baseUrl}}"],
+                          "path": ["api", "v1", "documents", "order"]
+                        }
+                      },
+                      "response": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "activity-logs",
+              "item": [
+                {
+                  "name": "List Activity Logs",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Accept", "value": "application/json" }],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/v1/activity-logs/?skip=0&limit=100",
+                      "host": ["{{baseUrl}}"],
+                      "path": ["api", "v1", "activity-logs", ""],
+                      "query": [{ "key": "skip", "value": "0" }, { "key": "limit", "value": "100" }]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://orderapi-mvp.onrender.com"
+    }
+  ]
+}

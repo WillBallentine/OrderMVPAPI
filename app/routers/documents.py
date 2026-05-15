@@ -78,7 +78,7 @@ async def create_order_from_document(
     settings = get_settings()
     extracted = await _read_and_extract(file, settings.max_upload_size_mb * 1024 * 1024)
 
-    missing = [f for f in ("first_name", "last_name", "dob") if not extracted.get(f)]
+    missing = [f for f in ("patient_first_name", "patient_last_name", "patient_dob") if not extracted.get(f)]
     if missing:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -86,9 +86,9 @@ async def create_order_from_document(
         )
 
     order = Order(
-        patient_first_name=extracted["first_name"],
-        patient_last_name=extracted["last_name"],
-        patient_dob=extracted["dob"],
+        patient_first_name=extracted["patient_first_name"],
+        patient_last_name=extracted["patient_last_name"],
+        patient_dob=extracted["patient_dob"],
     )
     db.add(order)
     db.commit()
