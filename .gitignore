@@ -65,6 +65,10 @@ db.sqlite3-journal
 *.db-shm
 *.db-wal
 
+# Frontend
+OrderMVPUI/node_modules/
+OrderMVPUI/dist/
+
 # Dev server output
 server.log
 server.err

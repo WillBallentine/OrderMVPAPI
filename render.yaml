@@ -28,3 +28,13 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "30"
 
+  - type: web
+    name: order-mvp-ui
+    runtime: static
+    rootDir: OrderMVPUI
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://orderapi-mvp.onrender.com/api/v1
+
